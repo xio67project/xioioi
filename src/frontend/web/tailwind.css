@@ -1,0 +1,114 @@
+@import url("https://fonts.googleapis.com/css2?family=Commissioner:wght@100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap");
+@import "tailwindcss";
+@source "./templates";
+@source "./static/js";
+
+@theme {
+	--font-sans: "Commissioner", sans-serif;
+	--font-mono: "JetBrains Mono", monospace;
+
+	--color-bg: #1a1b26;
+	--color-surface: #282b31;
+	--color-code: #24273a;
+	--color-fg: #bbbbbb;
+	--color-muted: #a9b1d6;
+	--color-line: #444444;
+	--color-link: #7aa2f7;
+	--color-link-hover: #0db9d7;
+	--color-accent: #6dade3;
+	--color-green: #9ece6a;
+	--color-select: #ad8ee6;
+}
+
+@layer base {
+	:root {
+		color-scheme: dark;
+	}
+
+	* {
+		border-radius: 0;
+		border-color: var(--color-line);
+	}
+
+	html,
+	body {
+		background-color: var(--color-bg);
+		color: var(--color-fg);
+	}
+
+	body {
+		@apply p-8;
+	}
+
+	h1 {
+		@apply mb-4 text-2xl font-bold;
+	}
+
+	a {
+		color: var(--color-link);
+	}
+
+	a:hover,
+	a:focus,
+	a:active {
+		color: var(--color-link-hover);
+	}
+
+	button,
+	input,
+	textarea,
+	select,
+	option {
+		background-color: var(--color-surface);
+		color: var(--color-fg);
+		border: 1px solid var(--color-line);
+	}
+
+	button:hover,
+	input[type="submit"]:hover,
+	input[type="button"]:hover,
+	select:hover {
+		background-color: var(--color-accent);
+		color: var(--color-bg);
+	}
+
+	input::placeholder,
+	textarea::placeholder {
+		color: var(--color-muted);
+		opacity: 0.6;
+	}
+
+	pre,
+	code,
+	kbd,
+	samp {
+		background-color: var(--color-code);
+		color: var(--color-green);
+	}
+
+	code {
+		@apply block p-4;
+	}
+
+	::selection {
+		background-color: var(--color-select);
+		color: var(--color-bg);
+	}
+
+	::-webkit-scrollbar {
+		width: 10px;
+		height: 10px;
+	}
+
+	::-webkit-scrollbar-track {
+		background: var(--color-bg);
+	}
+
+	::-webkit-scrollbar-thumb {
+		background: var(--color-line);
+	}
+
+	::-webkit-scrollbar-thumb:hover {
+		background: var(--color-accent);
+	}
+}
