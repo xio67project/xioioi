@@ -3,7 +3,7 @@
 ## Requirements
 
 - Rust
-- `tailwindcss`, `esbuild`, `tsc` in `PATH` (`npm i -g @tailwindcss/cli esbuild typescript`)
+- `tailwindcss`, `esbuild`, `tsc` in `PATH` (standalone [tailwindcss](https://github.com/tailwindlabs/tailwindcss/releases), `npm i -g esbuild typescript`)
 
 ## Running
 
