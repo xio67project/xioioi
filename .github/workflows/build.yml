@@ -1,0 +1,16 @@
+name: build
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: npm i -g @tailwindcss/cli esbuild typescript
+      - run: cargo clippy -- -D warnings
+      - run: cargo test
+      - run: cargo build

@@ -1,3 +1,4 @@
+use std::env;
 use std::fs;
 use std::process::Command;
 
@@ -8,6 +9,7 @@ fn run(name: &str, args: &[&str]) {
 	match status {
 		Ok(s) if s.success() => {}
 		Ok(s) => panic!("{name} failed: {s}"),
+		Err(e) if env::var("CI").is_ok() => panic!("{name} not found: {e}"),
 		Err(e) => println!("cargo:warning={name} not found, skipping: {e}"),
 	}
 }
