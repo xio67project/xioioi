@@ -27,3 +27,6 @@ target
 
 # tailwind output
 /src/frontend/web/static/css/app.css
+
+# esbuild output
+/src/frontend/web/static/js/
