@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Problemset - xioioi</title>
+		<link rel="stylesheet" href="/static/css/app.css">
+	</head>
+	<body>
+		%%navbar%%
+		<main>
+			<nav class="mb-4 flex">
+				<a href="/problemset" class="flex-1 bg-accent py-2 text-center text-bg hover:text-bg">Public problems</a>
+			</nav>
+			<form class="mb-6 flex max-w-xl" action="/problemset">
+				<input type="search" name="q" value="%%q%%" placeholder="Search by id or name" class="flex-1 px-3 py-1.5">
+				<button type="submit" class="border-l-0 px-4">Search</button>
+			</form>
+			<table>
+				<thead>
+					<tr>
+						<th><a href="?order_by=id%%qs%%">ID</a></th>
+						<th class="w-full"><a href="?order_by=name%%qs%%">Name</a></th>
+						<th class="text-center">Time</th>
+						<th class="text-center">Memory</th>
+					</tr>
+				</thead>
+				<tbody>
+					%%rows%%
+				</tbody>
+			</table>
+		</main>
+		%%footer%%
+	</body>
+</html>

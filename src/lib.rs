@@ -7,3 +7,5 @@ pub mod frontend;
 pub mod router;
 
 pub mod db;
+
+pub mod pkg;

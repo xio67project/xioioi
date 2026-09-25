@@ -13,16 +13,31 @@ cargo run
 
 http://localhost:8080
 
-## Users
+## Database
 
 ```sh
 ./db.py add admin <name>
-./db.py add user <name>
-./db.py del <name>
-./db.py list
+./db.py add problem examples/dol public
+./db.py add contest r1 "Round 1" "2026-10-01 18:00:00"
+./db.py link r1 A sum#741cf79
 ```
 
-Start xioioi once first so the database exists.
+Run `./db.py` for all commands. Start xioioi once first so the database exists.
+
+A problem id is `<zip name>#<first 7 chars of its sha1sum>`, its page is `/p/<name>/<hash>`.
+
+Problem zip:
+
+```
+config.toml    title, time_limit (ms), memory_limit (KiB)
+DOC.md         statement (Markdown)
+in/_00.in      example, shown under the statement
+out/_00.out
+in/a00.in      test 00 of group a
+out/a00.out
+```
+
+`add problem` takes a zip or a folder (zipped automatically, same folder = same hash). Problems are stored as `data/problems/<name#hash>.zip`. Examples are in `examples/`.
 
 ## Layout
 
@@ -31,9 +46,11 @@ Start xioioi once first so the database exists.
 | `src/main.rs` | entry point |
 | `src/router.rs` | serves backend + frontend |
 | `src/db.rs` | SQLite database |
-| `db.py` | user management |
+| `src/pkg.rs` | reads problem packages |
+| `db.py` | manage users, problems, contests |
 | `migrations/` | database schema |
-| `data/` | runtime: `xioioi.db` + `problems/<slug>/` files |
+| `examples/` | example problem packages |
+| `data/` | runtime: `xioioi.db` + `problems/<name#hash>.zip` |
 | `src/backend/backend.rs` | `/api/*` |
 | `src/frontend/frontend.rs` | `/` and `/static/*` |
 | `src/frontend/web/templates/` | HTML |

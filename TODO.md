@@ -2,15 +2,15 @@
 
 ## Important
 
-- [ ] Problems
-  - [ ] Parsing (Markdown)
-  - [ ] Problem list page (`/problemset`)
-  - [ ] Problem page with statement (`/p/<slug>`)
-  - [ ] Add / import a problem (package with statement, tests, config) into `data/problems/<slug>/`
-  - [ ] Edit / delete problems (admin)
+- [x] Problems
+  - [x] Parsing (Markdown)
+  - [x] Problem list page (`/problemset`)
+  - [x] Problem page with statement (`/p/<slug>`)
+  - [x] Add / import a problem (package with statement, tests, config) into `data/problems/<slug>/`
+  - [x] Edit / delete problems (admin)
 - [ ] Login / logout, sessions
 - [ ] Submit a solution (code upload or paste)
-- [ ] Judge: compile, run against tests with time and memory limits, **sandboxed**
+- [ ] Judge (**sandboxed** -> compile, run against tests w/ time&memory limits)
 - [ ] Results: OK, WA, TLE, MLE, RE, CE
 - [ ] Submissions table + submission list / detail page
 
@@ -21,7 +21,7 @@
 - [ ] Contests: start/end time, problem set, ranking
 - [ ] Scoring (per test group)
 - [ ] Custom checkers
-- [ ] Rejudge
+- [ ] Re-judge when problem modified
 
 ## Low
 
