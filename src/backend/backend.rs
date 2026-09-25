@@ -1,6 +1,14 @@
-use axum::{Json, Router, routing::get};
+use axum::{
+	Json, Router,
+	extract::{Path, State},
+	http::StatusCode,
+	routing::get,
+};
 use serde::Serialize;
+use sqlx::SqlitePool;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+use crate::db::{self, Problem};
 
 #[derive(Serialize)]
 struct Pong {
@@ -17,6 +25,20 @@ async fn ping() -> Json<Pong> {
 	Json(pong)
 }
 
-pub fn app() -> Router {
-	Router::new().route("/api/ping", get(ping))
+async fn problems(State(pool): State<SqlitePool>) -> Result<Json<Vec<Problem>>, StatusCode> {
+	let list = db::problems(&pool).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+	Ok(Json(list))
+}
+
+async fn problem(State(pool): State<SqlitePool>, Path(slug): Path<String>) -> Result<Json<Problem>, StatusCode> {
+	let found = db::problem(&pool, &slug).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+	found.map(Json).ok_or(StatusCode::NOT_FOUND)
+}
+
+pub fn app(pool: SqlitePool) -> Router {
+	Router::new()
+		.route("/api/ping", get(ping))
+		.route("/api/problems", get(problems))
+		.route("/api/problems/{slug}", get(problem))
+		.with_state(pool)
 }

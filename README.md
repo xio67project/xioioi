@@ -13,12 +13,27 @@ cargo run
 
 http://localhost:8080
 
+## Users
+
+```sh
+./db.py add admin <name>
+./db.py add user <name>
+./db.py del <name>
+./db.py list
+```
+
+Start xioioi once first so the database exists.
+
 ## Layout
 
 | Path | What |
 |---|---|
 | `src/main.rs` | entry point |
 | `src/router.rs` | serves backend + frontend |
+| `src/db.rs` | SQLite database |
+| `db.py` | user management |
+| `migrations/` | database schema |
+| `data/` | runtime: `xioioi.db` + `problems/<slug>/` files |
 | `src/backend/backend.rs` | `/api/*` |
 | `src/frontend/frontend.rs` | `/` and `/static/*` |
 | `src/frontend/web/templates/` | HTML |

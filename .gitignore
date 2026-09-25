@@ -30,3 +30,6 @@ target
 
 # esbuild output
 /src/frontend/web/static/js/
+
+# runtime data (db, problem files)
+/data/

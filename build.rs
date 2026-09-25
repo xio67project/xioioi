@@ -45,6 +45,7 @@ fn main() {
 	println!("cargo:rerun-if-changed={WEB}/templates");
 	println!("cargo:rerun-if-changed={WEB}/ts");
 	println!("cargo:rerun-if-changed={WEB}/tsconfig.json");
+	println!("cargo:rerun-if-changed=migrations");
 
 	tailwind();
 	typecheck();
