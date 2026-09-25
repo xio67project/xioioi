@@ -8,12 +8,12 @@
 	<body>
 		%%navbar%%
 		<main>
-			<nav class="mb-4 flex">
-				<a href="/problemset" class="flex-1 bg-accent py-2 text-center text-bg hover:text-bg">Public problems</a>
+			<nav class="nav-pills mb-4">
+				<a href="/problemset" class="active">Public problems</a>
 			</nav>
-			<form class="mb-6 flex max-w-xl" action="/problemset">
-				<input type="search" name="q" value="%%q%%" placeholder="Search by id or name" class="flex-1 px-3 py-1.5">
-				<button type="submit" class="border-l-0 px-4">Search</button>
+			<form class="input-group mb-6 max-w-xl" action="/problemset">
+				<input type="search" name="q" value="%%q%%" placeholder="Search by id or name" class="form-control">
+				<button type="submit" class="btn btn-outline">Search</button>
 			</form>
 			<table>
 				<thead>

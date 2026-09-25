@@ -1,7 +1,13 @@
-use pulldown_cmark::{Options, Parser, html};
+use markdown::{CompileOptions, Constructs, Options, ParseOptions};
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{self, Read};
+use std::sync::LazyLock;
+use syntect::easy::HighlightLines;
+use syntect::highlighting::{Theme, ThemeSet};
+use syntect::html::{IncludeBackground, styled_line_to_highlighted_html};
+use syntect::parsing::SyntaxSet;
+use syntect::util::LinesWithEndings;
 use zip::ZipArchive;
 
 use crate::db;
@@ -17,10 +23,69 @@ pub struct Pkg {
 	pub groups: BTreeMap<String, Vec<String>>,
 }
 
+static SYNTAXES: LazyLock<SyntaxSet> = LazyLock::new(SyntaxSet::load_defaults_newlines);
+static THEME: LazyLock<Theme> = LazyLock::new(|| ThemeSet::load_defaults().themes["base16-ocean.dark"].clone());
+
 fn markdown(src: &str) -> String {
-	let opts = Options::ENABLE_TABLES | Options::ENABLE_STRIKETHROUGH;
+	let opts = Options {
+		parse: ParseOptions {
+			constructs: Constructs {
+				html_flow: false,
+				html_text: false,
+				..Constructs::gfm()
+			},
+			..ParseOptions::gfm()
+		},
+		compile: CompileOptions::gfm(),
+	};
+	let html = markdown::to_html_with_options(src, &opts).unwrap_or_default();
+	highlight_blocks(&html)
+}
+
+fn unescape(s: &str) -> String {
+	s.replace("&lt;", "<")
+		.replace("&gt;", ">")
+		.replace("&quot;", "\"")
+		.replace("&#x27;", "'")
+		.replace("&amp;", "&")
+}
+
+fn highlight(code: &str, lang: &str) -> Option<String> {
+	let syntax = SYNTAXES
+		.find_syntax_by_token(lang)
+		.or_else(|| SYNTAXES.syntaxes().iter().find(|s| s.name.eq_ignore_ascii_case(lang)))?;
+	let mut lines = HighlightLines::new(syntax, &THEME);
 	let mut out = String::new();
-	html::push_html(&mut out, Parser::new_ext(src, opts));
+	for line in LinesWithEndings::from(code) {
+		let ranges = lines.highlight_line(line, &SYNTAXES).ok()?;
+		out.push_str(&styled_line_to_highlighted_html(&ranges, IncludeBackground::No).ok()?);
+	}
+	Some(out)
+}
+
+fn highlight_blocks(html: &str) -> String {
+	const OPEN: &str = "<pre><code class=\"language-";
+	const CLOSE: &str = "</code></pre>";
+	let mut out = String::new();
+	let mut rest = html;
+
+	while let Some(start) = rest.find(OPEN) {
+		out.push_str(&rest[..start]);
+		let after = &rest[start + OPEN.len()..];
+		let (Some(quote), Some(end)) = (after.find("\">"), after.find(CLOSE)) else {
+			out.push_str(&rest[start..]);
+			return out;
+		};
+		let lang = &after[..quote];
+		let body = &after[quote + 2..end];
+		match highlight(&unescape(body), lang) {
+			Some(colored) => out.push_str(&format!("{OPEN}{lang}\">{colored}{CLOSE}")),
+			None => out.push_str(&rest[start..start + OPEN.len() + end + CLOSE.len()]),
+		}
+		rest = &after[end + CLOSE.len()..];
+	}
+
+	out.push_str(rest);
 	out
 }
 

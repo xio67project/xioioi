@@ -9,3 +9,5 @@ pub mod router;
 pub mod db;
 
 pub mod pkg;
+
+pub mod auth;

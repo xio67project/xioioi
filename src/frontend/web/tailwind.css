@@ -7,19 +7,28 @@
 	--font-sans: "Commissioner", sans-serif;
 	--font-mono: "JetBrains Mono", monospace;
 
-	--color-bg: #1a1b26;
-	--color-bar: #16161e;
-	--color-surface: #282b31;
-	--color-code: #24273a;
-	--color-fg: #bbbbbb;
-	--color-bright: #c0caf5;
-	--color-muted: #a9b1d6;
-	--color-line: #444444;
-	--color-link: #7aa2f7;
-	--color-link-hover: #0db9d7;
-	--color-accent: #6dade3;
-	--color-green: #9ece6a;
-	--color-select: #ad8ee6;
+	--color-bg: #212529;
+	--color-bar: #2b3035;
+	--color-surface: #343a40;
+	--color-code: #2b3035;
+	--color-fg: #dee2e6;
+	--color-bright: #fff;
+	--color-muted: rgba(222, 226, 230, 0.75);
+	--color-line: #495057;
+	--color-line-soft: rgba(255, 255, 255, 0.15);
+	--color-link: #6ea8fe;
+	--color-link-hover: #8bb9fe;
+	--color-accent: #0d6efd;
+	--color-accent-hover: #0b5ed7;
+	--color-accent-border: #0a58ca;
+	--color-focus: #86b7fe;
+	--color-secondary: #6c757d;
+	--color-secondary-hover: #5c636a;
+	--color-secondary-border: #565e64;
+	--color-pink: #e685b5;
+	--color-danger-text: #ea868f;
+	--color-danger-bg: #2c0b0e;
+	--color-danger-border: #842029;
 }
 
 @layer base {
@@ -77,22 +86,28 @@
 		cursor: pointer;
 	}
 
-	button,
 	input,
 	textarea,
 	select,
 	option {
-		background-color: var(--color-surface);
+		background-color: var(--color-bg);
 		color: var(--color-fg);
 		border: 1px solid var(--color-line);
 	}
 
+	button,
+	input[type="submit"],
+	input[type="button"] {
+		background-color: var(--color-secondary);
+		color: var(--color-bright);
+		border: 1px solid var(--color-secondary);
+	}
+
 	button:hover,
 	input[type="submit"]:hover,
-	input[type="button"]:hover,
-	select:hover {
-		background-color: var(--color-accent);
-		color: var(--color-bg);
+	input[type="button"]:hover {
+		background-color: var(--color-secondary-hover);
+		border-color: var(--color-secondary-border);
 	}
 
 	input::placeholder,
@@ -106,7 +121,7 @@
 	kbd,
 	samp {
 		background-color: var(--color-code);
-		color: var(--color-green);
+		color: var(--color-pink);
 	}
 
 	code {
@@ -123,6 +138,12 @@
 
 	.doc h3 {
 		@apply mt-4 mb-2 text-lg font-bold;
+	}
+
+	.doc h4,
+	.doc h5,
+	.doc h6 {
+		@apply mt-4 mb-2 font-bold;
 	}
 
 	.doc p,
@@ -164,11 +185,6 @@
 		@apply whitespace-pre overflow-x-auto;
 	}
 
-	::selection {
-		background-color: var(--color-select);
-		color: var(--color-bg);
-	}
-
 	::-webkit-scrollbar {
 		width: 10px;
 		height: 10px;
@@ -184,5 +200,97 @@
 
 	::-webkit-scrollbar-thumb:hover {
 		background: var(--color-accent);
+	}
+}
+
+@layer components {
+	.form-label {
+		@apply mb-2 inline-block;
+	}
+
+	.form-control {
+		@apply block w-full rounded-md border border-line bg-bg px-3 py-1.5 text-fg transition-[border-color,box-shadow];
+	}
+
+	.form-control:focus {
+		@apply border-focus outline-none;
+		box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-accent) 25%, transparent);
+	}
+
+	.btn {
+		@apply inline-block rounded-md border border-secondary bg-secondary px-3 py-1.5 text-center text-bright transition-colors;
+	}
+
+	.btn:hover {
+		@apply border-secondary-border bg-secondary-hover text-bright;
+	}
+
+	.btn:focus-visible {
+		@apply outline-none;
+		box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-accent) 25%, transparent);
+	}
+
+	.btn-primary {
+		@apply border-accent bg-accent text-bright;
+	}
+
+	.btn-primary:hover {
+		@apply border-accent-border bg-accent-hover text-bright;
+	}
+
+	.btn-outline {
+		@apply border-accent bg-transparent text-accent;
+	}
+
+	.btn-outline:hover {
+		@apply border-accent bg-accent text-bright;
+	}
+
+	.input-group {
+		@apply flex;
+	}
+
+	.input-group > :not(:first-child) {
+		@apply -ml-px rounded-l-none;
+	}
+
+	.input-group > :not(:last-child) {
+		@apply rounded-r-none;
+	}
+
+	.input-group > .form-control {
+		@apply w-auto min-w-0 flex-1;
+	}
+
+	.input-group > :focus {
+		@apply relative z-10;
+	}
+
+	.alert-danger {
+		@apply rounded-md border border-danger-border bg-danger-bg px-4 py-3 text-danger-text;
+	}
+
+	.card {
+		@apply rounded-md border border-line-soft bg-bg;
+	}
+
+	.card-body {
+		@apply p-4;
+	}
+
+	.nav-pills {
+		@apply flex gap-1;
+	}
+
+	.nav-pills > a {
+		@apply flex-1 rounded-md px-4 py-2 text-center text-link;
+	}
+
+	.nav-pills > a:hover {
+		@apply text-link-hover;
+	}
+
+	.nav-pills > a.active {
+		@apply bg-accent text-bright;
 	}
 }
