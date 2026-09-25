@@ -8,7 +8,7 @@
   - [x] Problem page with statement (`/p/<slug>`)
   - [x] Add / import a problem (package with statement, tests, config) into `data/problems/<slug>/`
   - [x] Edit / delete problems (admin)
-- [ ] Login / logout, sessions
+- [x] Login / logout, sessions
 - [ ] Submit a solution (code upload or paste)
 - [ ] Judge (**sandboxed** -> compile, run against tests w/ time&memory limits)
 - [ ] Results: OK, WA, TLE, MLE, RE, CE

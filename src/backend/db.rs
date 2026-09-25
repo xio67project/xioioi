@@ -50,12 +50,6 @@ pub fn problem_zip(id: &str) -> PathBuf {
 	Path::new(DATA).join("problems").join(format!("{id}.zip"))
 }
 
-pub async fn problems(pool: &SqlitePool) -> sqlx::Result<Vec<Problem>> {
-	sqlx::query_as("SELECT * FROM problem_view WHERE public = 1 ORDER BY name")
-		.fetch_all(pool)
-		.await
-}
-
 pub async fn problem(pool: &SqlitePool, id: &str) -> sqlx::Result<Option<Problem>> {
 	sqlx::query_as("SELECT * FROM problem_view WHERE id = ? AND public = 1")
 		.bind(id)
@@ -96,4 +90,48 @@ pub async fn search(pool: &SqlitePool, q: &str, order: Order) -> sqlx::Result<Ve
 		Order::Name => "SELECT * FROM problem_view WHERE public = 1 AND (id LIKE ?1 ESCAPE '\\' OR title LIKE ?1 ESCAPE '\\') ORDER BY title",
 	};
 	sqlx::query_as(sql).bind(pattern).fetch_all(pool).await
+}
+
+#[derive(sqlx::FromRow)]
+pub struct User {
+	pub id: i64,
+	pub name: String,
+	pub password: String,
+	pub admin: bool,
+}
+
+pub async fn user_by_name(pool: &SqlitePool, name: &str) -> sqlx::Result<Option<User>> {
+	sqlx::query_as("SELECT id, name, password, admin FROM users WHERE name = ?")
+		.bind(name)
+		.fetch_optional(pool)
+		.await
+}
+
+pub async fn new_session(pool: &SqlitePool, token: &str, user: i64) -> sqlx::Result<()> {
+	sqlx::query("DELETE FROM sessions WHERE expires_at <= datetime('now')")
+		.execute(pool)
+		.await?;
+	sqlx::query("INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, datetime('now', '+30 days'))")
+		.bind(token)
+		.bind(user)
+		.execute(pool)
+		.await?;
+	Ok(())
+}
+
+pub async fn session_user(pool: &SqlitePool, token: &str) -> sqlx::Result<Option<User>> {
+	sqlx::query_as(
+		"SELECT u.id, u.name, u.password, u.admin FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > datetime('now')",
+	)
+	.bind(token)
+	.fetch_optional(pool)
+	.await
+}
+
+pub async fn end_session(pool: &SqlitePool, token: &str) -> sqlx::Result<()> {
+	sqlx::query("DELETE FROM sessions WHERE token = ?")
+		.bind(token)
+		.execute(pool)
+		.await?;
+	Ok(())
 }

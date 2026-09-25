@@ -1,16 +1,17 @@
 use axum::{
-	Router,
-	extract::{Path, Query, State},
-	http::{StatusCode, header},
-	response::{Html, IntoResponse, Response},
-	routing::get,
+	Form, Router,
+	extract::{Path, State},
+	http::{StatusCode, header, request::Parts},
+	response::{Html, IntoResponse, Redirect, Response},
+	routing::{get, post},
 };
 use rust_embed::Embed;
 use serde::Deserialize;
 use sqlx::SqlitePool;
 
-use crate::db::{self, Order, Problem};
-use crate::pkg;
+use crate::backend::auth::{self, Me};
+use crate::backend::db;
+use crate::backend::pkg;
 
 #[derive(Embed)]
 #[folder = "src/frontend/web/static/"]
@@ -25,14 +26,19 @@ fn load(path: &str) -> Option<String> {
 	Some(String::from_utf8_lossy(&file.data).into_owned())
 }
 
-fn render(name: &str) -> Html<String> {
-	render_with(name, &[])
+fn account(me: &Me) -> String {
+	match &me.0 {
+		None => "<a href=\"/login\" class=\"flex h-full items-center px-3 text-muted hover:text-bright\">Log in</a>".to_string(),
+		Some(user) => format!(
+			"<span class=\"px-3 text-bright\">{}</span>\n\t<form method=\"post\" action=\"/logout\" class=\"flex h-full\">\n\t\t<button type=\"submit\" class=\"border-0 bg-transparent px-3 text-muted hover:bg-transparent hover:text-bright\">Log out</button>\n\t</form>",
+			escape(&user.name)
+		),
+	}
 }
 
-fn render_with(name: &str, vars: &[(&str, String)]) -> Html<String> {
-	let src = load(name).unwrap_or_default();
+fn fill(src: &str, vars: &[(&str, String)], depth: u8) -> String {
 	let mut out = String::new();
-	let mut rest = src.as_str();
+	let mut rest = src;
 
 	while let Some(start) = rest.find("%%") {
 		out.push_str(&rest[..start]);
@@ -47,8 +53,8 @@ fn render_with(name: &str, vars: &[(&str, String)]) -> Html<String> {
 		let key = &after[..end];
 		if let Some((_, value)) = vars.iter().find(|(k, _)| *k == key) {
 			out.push_str(value);
-		} else if let Some(partial) = load(&format!("partials/{key}.html")) {
-			out.push_str(partial.trim_end());
+		} else if let Some(partial) = load(&format!("partials/{key}.html")).filter(|_| depth < 4) {
+			out.push_str(&fill(partial.trim_end(), vars, depth + 1));
 		} else {
 			out.push_str(&rest[start..start + end + 4]);
 		}
@@ -56,15 +62,22 @@ fn render_with(name: &str, vars: &[(&str, String)]) -> Html<String> {
 	}
 
 	out.push_str(rest);
-	Html(out)
+	out
 }
 
-async fn index() -> Html<String> {
-	render("index.html")
+fn render(name: &str, me: &Me, vars: &[(&str, String)]) -> Html<String> {
+	let src = load(name).unwrap_or_default();
+	let mut all = vec![("account", account(me))];
+	all.extend(vars.iter().map(|(k, v)| (*k, v.clone())));
+	Html(fill(&src, &all, 0))
 }
 
-async fn todo() -> (StatusCode, Html<String>) {
-	(StatusCode::NOT_FOUND, render("todo.html"))
+async fn index(me: Me) -> Html<String> {
+	render("index.html", &me, &[])
+}
+
+async fn todo(me: Me) -> (StatusCode, Html<String>) {
+	(StatusCode::NOT_FOUND, render("todo.html", &me, &[]))
 }
 
 fn escape(s: &str) -> String {
@@ -73,18 +86,6 @@ fn escape(s: &str) -> String {
 		.replace('>', "&gt;")
 		.replace('"', "&quot;")
 		.replace('\'', "&#39;")
-}
-
-fn encode(s: &str) -> String {
-	let mut out = String::new();
-	for b in s.bytes() {
-		if b.is_ascii_alphanumeric() || b"-_.~".contains(&b) {
-			out.push(b as char);
-		} else {
-			out.push_str(&format!("%{b:02X}"));
-		}
-	}
-	out
 }
 
 fn time(ms: i64) -> String {
@@ -103,50 +104,8 @@ fn memory(kib: i64) -> String {
 	}
 }
 
-fn link(id: &str) -> String {
-	let (name, hash) = id.split_once('#').unwrap_or((id, ""));
-	format!("/p/{}/{}", encode(name), encode(hash))
-}
-
-fn row(p: &Problem) -> String {
-	format!(
-		"<tr>\n\t<td class=\"font-mono whitespace-nowrap\">{}</td>\n\t<td><a href=\"{}\">{}</a></td>\n\t<td class=\"text-center whitespace-nowrap\">{}</td>\n\t<td class=\"text-center whitespace-nowrap\">{}</td>\n</tr>",
-		escape(&p.id),
-		link(&p.id),
-		escape(&p.title),
-		time(p.time_limit),
-		memory(p.memory_limit),
-	)
-}
-
-#[derive(Deserialize)]
-struct SearchQuery {
-	#[serde(default)]
-	q: String,
-	order_by: Option<String>,
-}
-
-async fn problemset(State(pool): State<SqlitePool>, Query(query): Query<SearchQuery>) -> Result<Html<String>, StatusCode> {
-	let order = match query.order_by.as_deref() {
-		Some("name") => Order::Name,
-		_ => Order::Id,
-	};
-	let problems = db::search(&pool, query.q.trim(), order)
-		.await
-		.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-	let rows = if problems.is_empty() {
-		"<tr><td colspan=\"4\" class=\"text-center text-muted\">No problems found.</td></tr>".to_string()
-	} else {
-		problems.iter().map(row).collect::<Vec<_>>().join("\n")
-	};
-	let qs = if query.q.is_empty() {
-		String::new()
-	} else {
-		format!("&amp;q={}", encode(&query.q))
-	};
-
-	Ok(render_with("problemset.html", &[("rows", rows), ("q", escape(&query.q)), ("qs", qs)]))
+async fn problemset(me: Me) -> Html<String> {
+	render("problemset.html", &me, &[])
 }
 
 fn examples(list: &[pkg::Example]) -> String {
@@ -162,7 +121,7 @@ fn examples(list: &[pkg::Example]) -> String {
 	out
 }
 
-async fn problem(State(pool): State<SqlitePool>, Path((name, hash)): Path<(String, String)>) -> Result<Html<String>, StatusCode> {
+async fn problem(me: Me, State(pool): State<SqlitePool>, Path((name, hash)): Path<(String, String)>) -> Result<Html<String>, StatusCode> {
 	let id = format!("{name}#{hash}");
 	let p = db::problem(&pool, &id)
 		.await
@@ -170,7 +129,7 @@ async fn problem(State(pool): State<SqlitePool>, Path((name, hash)): Path<(Strin
 		.ok_or(StatusCode::NOT_FOUND)?;
 	let pkg = pkg::load(&id).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-	Ok(render_with("problem.html", &[
+	Ok(render("problem.html", &me, &[
 		("title", escape(&p.title)),
 		("id", escape(&p.id)),
 		("time", time(p.time_limit)),
@@ -178,6 +137,61 @@ async fn problem(State(pool): State<SqlitePool>, Path((name, hash)): Path<(Strin
 		("doc", pkg.doc),
 		("examples", examples(&pkg.examples)),
 	]))
+}
+
+#[derive(Deserialize)]
+struct LoginForm {
+	name: String,
+	password: String,
+}
+
+fn login_page(me: &Me, name: &str, error: &str) -> Html<String> {
+	let error = if error.is_empty() {
+		String::new()
+	} else {
+		format!("<div class=\"alert-danger mb-3\">{}</div>", escape(error))
+	};
+	render("login.html", me, &[("name", escape(name)), ("error", error)])
+}
+
+async fn login_form(me: Me) -> Response {
+	if me.0.is_some() {
+		return Redirect::to("/").into_response();
+	}
+	login_page(&me, "", "").into_response()
+}
+
+async fn login(me: Me, State(pool): State<SqlitePool>, Form(form): Form<LoginForm>) -> Response {
+	let user = match db::user_by_name(&pool, form.name.trim()).await {
+		Ok(user) => user,
+		Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+	};
+
+	let hash = user.as_ref().map(|u| u.password.clone());
+	let password = form.password;
+	let ok = tokio::task::spawn_blocking(move || auth::verify(&password, hash.as_deref()))
+		.await
+		.unwrap_or(false);
+
+	let Some(user) = user.filter(|_| ok) else {
+		let page = login_page(&me, &form.name, "Wrong login or password.");
+		return (StatusCode::UNAUTHORIZED, page).into_response();
+	};
+
+	let token = auth::new_token();
+	if db::new_session(&pool, &auth::hash_token(&token), user.id).await.is_err() {
+		return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+	}
+	let cookie = format!("{}={token}; Path=/; HttpOnly; SameSite=Lax; Max-Age={}", auth::COOKIE, auth::MAX_AGE);
+	([(header::SET_COOKIE, cookie)], Redirect::to("/")).into_response()
+}
+
+async fn logout(State(pool): State<SqlitePool>, parts: Parts) -> Response {
+	if let Some(token) = auth::cookie(&parts, auth::COOKIE) {
+		let _ = db::end_session(&pool, &auth::hash_token(token)).await;
+	}
+	let cookie = format!("{}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0", auth::COOKIE);
+	([(header::SET_COOKIE, cookie)], Redirect::to("/")).into_response()
 }
 
 async fn static_file(Path(path): Path<String>) -> Response {
@@ -195,6 +209,8 @@ pub fn app(pool: SqlitePool) -> Router {
 		.route("/todo", get(todo))
 		.route("/problemset", get(problemset))
 		.route("/p/{name}/{hash}", get(problem))
+		.route("/login", get(login_form).post(login))
+		.route("/logout", post(logout))
 		.route("/static/{*path}", get(static_file))
 		.with_state(pool)
 }

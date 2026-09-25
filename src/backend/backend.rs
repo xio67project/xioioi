@@ -1,14 +1,21 @@
 use axum::{
 	Json, Router,
-	extract::{Path, State},
+	extract::{Path, Query, State},
 	http::StatusCode,
 	routing::get,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::db::{self, Contest, ContestProblem, Problem};
+#[path = "auth.rs"]
+pub mod auth;
+#[path = "db.rs"]
+pub mod db;
+#[path = "pkg.rs"]
+pub mod pkg;
+
+use db::{Contest, ContestProblem, Order, Problem};
 
 #[derive(Serialize)]
 struct Pong {
@@ -25,8 +32,21 @@ async fn ping() -> Json<Pong> {
 	Json(pong)
 }
 
-async fn problems(State(pool): State<SqlitePool>) -> Result<Json<Vec<Problem>>, StatusCode> {
-	let list = db::problems(&pool).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+#[derive(Deserialize)]
+struct SearchQuery {
+	#[serde(default)]
+	q: String,
+	order_by: Option<String>,
+}
+
+async fn problems(State(pool): State<SqlitePool>, Query(query): Query<SearchQuery>) -> Result<Json<Vec<Problem>>, StatusCode> {
+	let order = match query.order_by.as_deref() {
+		Some("name") => Order::Name,
+		_ => Order::Id,
+	};
+	let list = db::search(&pool, query.q.trim(), order)
+		.await
+		.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 	Ok(Json(list))
 }
 

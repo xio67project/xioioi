@@ -123,8 +123,6 @@ def check_package(z):
 	for test in sorted(ins):
 		if not TEST.match(test):
 			sys.exit(f"bad test name {test}, use a letter (group) or _ (example) + digits, e.g. a00, _00")
-	if not any(t[0] != "_" for t in ins):
-		sys.exit("no tests, only examples")
 	return cfg, prefix
 
 
