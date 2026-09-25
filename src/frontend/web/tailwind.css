@@ -37,7 +37,7 @@
 	}
 
 	body {
-		@apply p-8;
+		@apply flex min-h-screen flex-col p-8;
 	}
 
 	h1 {
