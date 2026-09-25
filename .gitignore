@@ -33,3 +33,6 @@ target
 
 # runtime data (db, problem files)
 /data/
+
+# python
+/__pycache__/

@@ -8,9 +8,11 @@
 	--font-mono: "JetBrains Mono", monospace;
 
 	--color-bg: #1a1b26;
+	--color-bar: #16161e;
 	--color-surface: #282b31;
 	--color-code: #24273a;
 	--color-fg: #bbbbbb;
+	--color-bright: #c0caf5;
 	--color-muted: #a9b1d6;
 	--color-line: #444444;
 	--color-link: #7aa2f7;
@@ -37,7 +39,11 @@
 	}
 
 	body {
-		@apply flex min-h-screen flex-col p-8;
+		@apply flex min-h-screen flex-col;
+	}
+
+	main {
+		@apply mx-auto w-full max-w-6xl flex-1 p-8;
 	}
 
 	h1 {
@@ -48,10 +54,27 @@
 		color: var(--color-link);
 	}
 
+	table {
+		@apply w-full border-collapse;
+	}
+
+	th,
+	td {
+		@apply border-t p-3 text-left align-top;
+	}
+
+	th {
+		@apply font-bold whitespace-nowrap;
+	}
+
 	a:hover,
 	a:focus,
 	a:active {
 		color: var(--color-link-hover);
+	}
+
+	button {
+		cursor: pointer;
 	}
 
 	button,
@@ -88,6 +111,57 @@
 
 	code {
 		@apply block p-4;
+	}
+
+	.doc h1 {
+		@apply mt-6 mb-3 text-2xl font-bold;
+	}
+
+	.doc h2 {
+		@apply mt-6 mb-3 text-xl font-bold;
+	}
+
+	.doc h3 {
+		@apply mt-4 mb-2 text-lg font-bold;
+	}
+
+	.doc p,
+	.doc pre,
+	.doc table,
+	.doc blockquote {
+		@apply mb-4;
+	}
+
+	.doc ul {
+		@apply mb-4 list-disc pl-6;
+	}
+
+	.doc ol {
+		@apply mb-4 list-decimal pl-6;
+	}
+
+	.doc li {
+		@apply mb-1;
+	}
+
+	.doc blockquote {
+		@apply border-l-4 pl-4 text-muted;
+	}
+
+	.doc hr {
+		@apply my-6;
+	}
+
+	.doc :not(pre) > code {
+		@apply inline px-1 py-0.5;
+	}
+
+	.doc img {
+		@apply max-w-full;
+	}
+
+	pre code {
+		@apply whitespace-pre overflow-x-auto;
 	}
 
 	::selection {
