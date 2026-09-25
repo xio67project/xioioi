@@ -50,12 +50,6 @@ pub fn problem_zip(id: &str) -> PathBuf {
 	Path::new(DATA).join("problems").join(format!("{id}.zip"))
 }
 
-pub async fn problems(pool: &SqlitePool) -> sqlx::Result<Vec<Problem>> {
-	sqlx::query_as("SELECT * FROM problem_view WHERE public = 1 ORDER BY name")
-		.fetch_all(pool)
-		.await
-}
-
 pub async fn problem(pool: &SqlitePool, id: &str) -> sqlx::Result<Option<Problem>> {
 	sqlx::query_as("SELECT * FROM problem_view WHERE id = ? AND public = 1")
 		.bind(id)

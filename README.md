@@ -43,15 +43,15 @@ out/a00.out
 
 | Path | What |
 |---|---|
-| `src/main.rs` | entry point |
-| `src/router.rs` | serves backend + frontend |
-| `src/db.rs` | SQLite database |
-| `src/pkg.rs` | reads problem packages |
+| `src/main.rs` | entry point, serves backend + frontend |
 | `db.py` | manage users, problems, contests |
 | `migrations/` | database schema |
 | `examples/` | example problem packages |
 | `data/` | runtime: `xioioi.db` + `problems/<name#hash>.zip` |
 | `src/backend/backend.rs` | `/api/*` |
+| `src/backend/db.rs` | SQLite database |
+| `src/backend/auth.rs` | login sessions |
+| `src/backend/pkg.rs` | reads problem packages |
 | `src/frontend/frontend.rs` | `/` and `/static/*` |
 | `src/frontend/web/templates/` | HTML |
 | `src/frontend/web/ts/` | TypeScript |

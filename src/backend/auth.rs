@@ -7,7 +7,7 @@ use sha2::{Digest, Sha256};
 use sqlx::SqlitePool;
 use std::convert::Infallible;
 
-use crate::db::{self, User};
+use super::db::{self, User};
 
 pub const COOKIE: &str = "session";
 pub const MAX_AGE: i64 = 30 * 24 * 60 * 60;

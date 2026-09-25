@@ -12,23 +12,24 @@
 				<a href="/problemset" class="active">Public problems</a>
 			</nav>
 			<form class="input-group mb-6 max-w-xl" action="/problemset">
-				<input type="search" name="q" value="%%q%%" placeholder="Search by id or name" class="form-control">
+				<input type="search" name="q" id="q" placeholder="Search by id or name" class="form-control">
 				<button type="submit" class="btn btn-outline">Search</button>
 			</form>
 			<table>
 				<thead>
 					<tr>
-						<th><a href="?order_by=id%%qs%%">ID</a></th>
-						<th class="w-full"><a href="?order_by=name%%qs%%">Name</a></th>
+						<th><a id="sort-id" href="?order_by=id">ID</a></th>
+						<th class="w-full"><a id="sort-name" href="?order_by=name">Name</a></th>
 						<th class="text-center">Time</th>
 						<th class="text-center">Memory</th>
 					</tr>
 				</thead>
-				<tbody>
-					%%rows%%
+				<tbody id="problems">
+					<tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
 				</tbody>
 			</table>
 		</main>
 		%%footer%%
+		<script src="/static/js/problemset.js"></script>
 	</body>
 </html>

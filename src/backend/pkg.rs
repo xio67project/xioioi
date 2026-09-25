@@ -10,7 +10,7 @@ use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 use zip::ZipArchive;
 
-use crate::db;
+use super::db;
 
 pub struct Example {
 	pub input: String,

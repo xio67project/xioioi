@@ -1,6 +1,6 @@
 use axum::{
 	Form, Router,
-	extract::{Path, Query, State},
+	extract::{Path, State},
 	http::{StatusCode, header, request::Parts},
 	response::{Html, IntoResponse, Redirect, Response},
 	routing::{get, post},
@@ -9,9 +9,9 @@ use rust_embed::Embed;
 use serde::Deserialize;
 use sqlx::SqlitePool;
 
-use crate::auth::{self, Me};
-use crate::db::{self, Order, Problem};
-use crate::pkg;
+use crate::backend::auth::{self, Me};
+use crate::backend::db;
+use crate::backend::pkg;
 
 #[derive(Embed)]
 #[folder = "src/frontend/web/static/"]
@@ -88,18 +88,6 @@ fn escape(s: &str) -> String {
 		.replace('\'', "&#39;")
 }
 
-fn encode(s: &str) -> String {
-	let mut out = String::new();
-	for b in s.bytes() {
-		if b.is_ascii_alphanumeric() || b"-_.~".contains(&b) {
-			out.push(b as char);
-		} else {
-			out.push_str(&format!("%{b:02X}"));
-		}
-	}
-	out
-}
-
 fn time(ms: i64) -> String {
 	if ms % 1000 == 0 {
 		format!("{} s", ms / 1000)
@@ -116,50 +104,8 @@ fn memory(kib: i64) -> String {
 	}
 }
 
-fn link(id: &str) -> String {
-	let (name, hash) = id.split_once('#').unwrap_or((id, ""));
-	format!("/p/{}/{}", encode(name), encode(hash))
-}
-
-fn row(p: &Problem) -> String {
-	format!(
-		"<tr>\n\t<td class=\"font-mono whitespace-nowrap\">{}</td>\n\t<td><a href=\"{}\">{}</a></td>\n\t<td class=\"text-center whitespace-nowrap\">{}</td>\n\t<td class=\"text-center whitespace-nowrap\">{}</td>\n</tr>",
-		escape(&p.id),
-		link(&p.id),
-		escape(&p.title),
-		time(p.time_limit),
-		memory(p.memory_limit),
-	)
-}
-
-#[derive(Deserialize)]
-struct SearchQuery {
-	#[serde(default)]
-	q: String,
-	order_by: Option<String>,
-}
-
-async fn problemset(me: Me, State(pool): State<SqlitePool>, Query(query): Query<SearchQuery>) -> Result<Html<String>, StatusCode> {
-	let order = match query.order_by.as_deref() {
-		Some("name") => Order::Name,
-		_ => Order::Id,
-	};
-	let problems = db::search(&pool, query.q.trim(), order)
-		.await
-		.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-	let rows = if problems.is_empty() {
-		"<tr><td colspan=\"4\" class=\"text-center text-muted\">No problems found.</td></tr>".to_string()
-	} else {
-		problems.iter().map(row).collect::<Vec<_>>().join("\n")
-	};
-	let qs = if query.q.is_empty() {
-		String::new()
-	} else {
-		format!("&amp;q={}", encode(&query.q))
-	};
-
-	Ok(render("problemset.html", &me, &[("rows", rows), ("q", escape(&query.q)), ("qs", qs)]))
+async fn problemset(me: Me) -> Html<String> {
+	render("problemset.html", &me, &[])
 }
 
 fn examples(list: &[pkg::Example]) -> String {
